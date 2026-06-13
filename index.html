@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cuestionario MCC</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       VARIABLES Y RESET
+    ============================================================ */
+    :root {
+      --bg:         #F5F3EE;
+      --surface:    #FFFFFF;
+      --border:     #E0DDD6;
+      --accent:     #1A3A2A;      
+      --accent2:    #D4A843;      
+      --text:       #1C1C1C;
+      --muted:      #6B6B6B;
+      --low:        #C0392B;
+      --med:        #D4A843;
+      --high:       #27AE60;
+      --radius:     14px;
+      --shadow:     0 4px 24px rgba(0,0,0,.08);
+      --transition: .35s cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ============================================================
+       CABECERA
+    ============================================================ */
+    header {
+      width: 100%;
+      background: var(--accent);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 15px;
+    }
+
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1rem, 2.2vw, 1.35rem);
+      color: #fff;
+      letter-spacing: -.01em;
+      line-height: 1.2;
+    }
+
+    header .shield {
+      font-size: 2rem;
+      flex-shrink: 0;
+      cursor: pointer;
+      user-select: none;
+      transition: transform var(--transition);
+    }
+    
+    header .shield:active {
+      transform: scale(0.9);
+    }
+
+    /* ============================================================
+       CONTENEDOR PRINCIPAL
+    ============================================================ */
+    main {
+      width: 100%;
+      max-width: 740px;
+      padding: 32px 20px 60px;
+      flex: 1;
+    }
+
+    /* ============================================================
+       PANTALLAS (vistas)
+    ============================================================ */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ============================================================
+       PANTALLA: INTRODUCCIÓN
+    ============================================================ */
+    #screen-intro .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 48px 36px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    #screen-intro h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    #screen-intro p {
+      font-size: 1.05rem;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    .intro-icon {
+      font-size: 3.5rem;
+      margin-bottom: 16px;
+    }
+
+    /* ============================================================
+       PANTALLA: REGISTRO
+    ============================================================ */
+    #screen-register .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 40px 36px;
+      border: 1px solid var(--border);
+    }
+
+    #screen-register h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+    }
+
+    #screen-register p.subtitle {
+      color: var(--muted);
+      margin-bottom: 12px;
+      font-size: .95rem;
+    }
+
+    #screen-register p.warning-note {
+      color: var(--low);
+      font-weight: 500;
+      font-size: .85rem;
+      margin-bottom: 28px;
+      background: #fce8e6;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #f5c6c3;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 7px;
+      font-size: .9rem;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      background: var(--bg);
+      color: var(--text);
+      transition: border-color var(--transition);
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--accent);
+    }
+
+    .error-msg {
+      color: var(--low);
+      font-size: .82rem;
+      margin-top: 5px;
+      display: none;
+    }
+
+    /* ============================================================
+       PANTALLA: CUESTIONARIO
+    ============================================================ */
+    .progress-wrap { margin-bottom: 24px; }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: .82rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .progress-bar-bg {
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+    }
+
+    .question-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 36px 36px 28px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      animation: slideIn .35s ease forwards;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .q-number {
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 14px;
+    }
+
+    .q-text {
+      font-size: 1.08rem;
+      font-weight: 500;
+      line-height: 1.55;
+      margin-bottom: 26px;
+      white-space: pre-wrap;
+    }
+
+    .options-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .option-item label {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      cursor: pointer;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      transition: border-color var(--transition), background var(--transition);
+      font-size: .93rem;
+      line-height: 1.45;
+    }
+    .option-item label:hover {
+      border-color: var(--accent);
+      background: #EDF4F0;
+    }
+    .option-item input[type="radio"] { position: absolute; opacity: 0; width: 0; }
+
+    .radio-circle {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .radio-circle::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #fff;
+      display: none;
+    }
+    .option-item input[type="radio"]:checked + label {
+      border-color: var(--accent);
+      background: #EDF4F0;
+    }
+    .option-item input[type="radio"]:checked + label .radio-circle {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .option-item input[type="radio"]:checked + label .radio-circle::after { display: block; }
+
+    .alert-answer {
+      color: var(--low);
+      font-size: .83rem;
+      margin-top: 14px;
+      font-weight: 500;
+      display: none;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: flex-end; 
+      align-items: center;
+      margin-top: 28px;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 11px 26px;
+      border-radius: 9px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: .92rem;
+      cursor: pointer;
+      transition: opacity var(--transition), transform var(--transition);
+    }
+    .btn:hover { opacity: .88; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-secondary { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-large { padding: 14px 32px; font-size: 1.05rem; width: 100%; max-width: 300px; margin: 0 auto; display: block; }
+
+    /* ============================================================
+       PANTALLA: RESULTADO / AGRADECIMIENTO
+    ============================================================ */
+    #screen-result .result-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .result-banner { 
+      padding: 36px 36px 28px; 
+      text-align: center; 
+      background: #edf7f0; 
+    }
+    
+    .result-icon { font-size: 3.2rem; margin-bottom: 10px; }
+    
+    .result-level { 
+      font-family: 'Syne', sans-serif; 
+      font-size: 1.8rem; 
+      margin-bottom: 12px; 
+      color: var(--high);
+    }
+
+    .result-message { 
+      font-size: 1.05rem; 
+      color: var(--text); 
+      line-height: 1.6; 
+      max-width: 480px; 
+      margin: 0 auto; 
+    }
+
+    .result-body { padding: 28px 36px 36px; border-top: 1px solid var(--border); }
+    .result-body h3 { font-family: 'Syne', sans-serif; font-size: 1rem; margin-bottom: 16px; }
+
+    .answers-summary { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .answer-row { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 12px 16px; font-size: .85rem; line-height: 1.4; }
+    .answer-row .ar-q { font-weight: 500; margin-bottom: 6px; }
+    .answer-row .ar-a { color: var(--muted); display: block; margin-top: 4px; }
+    .answer-row .ar-correct { color: var(--high); font-weight: 500; margin-top: 4px; display: block; }
+    .answer-row .ar-wrong { color: var(--low); font-weight: 500; }
+
+    /* ============================================================
+       PANTALLA: PANEL DE RESULTADOS
+    ============================================================ */
+    #screen-panel h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; margin-bottom: 6px; }
+    #screen-panel .panel-subtitle { color: var(--muted); font-size: .9rem; margin-bottom: 24px; }
+
+    .panel-actions { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: .88rem; }
+    thead th { background: var(--accent); color: #fff; padding: 13px 16px; text-align: left; font-weight: 600; font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background var(--transition); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+    tbody td { padding: 12px 16px; vertical-align: top; line-height: 1.4; }
+
+    .btn-detail { padding: 5px 12px; font-size: .78rem; border-radius: 6px; background: var(--bg); border: 1.5px solid var(--border); cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; transition: border-color var(--transition); }
+    .btn-detail:hover { border-color: var(--accent); }
+
+    /* Modal detalle */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--surface); border-radius: var(--radius); box-shadow: 0 12px 48px rgba(0,0,0,.2); width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; padding: 32px; }
+    .modal-box h3 { font-family: 'Syne', sans-serif; font-size: 1.15rem; margin-bottom: 4px; }
+    .modal-meta { font-size: .82rem; color: var(--muted); margin-bottom: 20px; }
+    .modal-close { float: right; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--muted); line-height: 1; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); font-size: .95rem; }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+    @media (max-width: 540px) {
+      header { flex-wrap: wrap; gap: 10px; }
+      #screen-intro .card { padding: 36px 24px; }
+      .question-card { padding: 24px 20px 20px; }
+      #screen-register .card { padding: 28px 20px; }
+      .result-banner { padding: 28px 20px 20px; }
+      .result-body { padding: 20px 20px 28px; }
+      .nav-buttons .btn { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="shield" onclick="requestAdminAccess()" title="Área restringida">🦺</span>
+  <h1>Cuestionario de MMC</h1>
+</header>
+
+<main>
+
+  <div id="screen-intro" class="screen active">
+    <div class="card">
+      <div class="intro-icon">👋</div>
+      <h2>¡Te damos la bienvenida!</h2>
+      <p>
+        Somos de la <strong>Universidad Nacional de San Luis (UNSL)</strong>.<br><br>
+        Al destinar unos minutos para responder este cuestionario nos estás ayudando muchísimo con nuestro proyecto final sobre Higiene y Seguridad en el Trabajo.<br><br>
+        ¡Muchas gracias por tu tiempo y colaboración!
+      </p>
+      <button class="btn btn-primary btn-large" onclick="goToRegister()">Comenzar</button>
+    </div>
+  </div>
+
+  <div id="screen-register" class="screen">
+    <div class="card">
+      <h2>Antes de comenzar…</h2>
+      <p class="subtitle">Completá los datos para registrar tus respuestas. Solo te tomará un momento.</p>
+
+      <div class="form-group">
+        <label for="input-nombre">Nombre completo*</label>
+        <input type="text" id="input-nombre" placeholder="Ej.: María García" autocomplete="off" />
+        <span class="error-msg" id="err-nombre">Por favor ingresá tu nombre.</span>
+        <span class="error-msg" id="err-duplicado" style="color: var(--low); font-weight: 500;">Ya se ha registrado un cuestionario con este nombre. Solo puedes responder una vez.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="input-sector">Sector o puesto de trabajo*</label>
+        <input type="text" id="input-sector" placeholder="Ej.: Logística / Operario de depósito" autocomplete="off" />
+        <span class="error-msg" id="err-sector">Por favor ingresá tu sector o puesto.</span>
+      </div>
+
+      <div style="margin-top: 28px;">
+        <button class="btn btn-primary" onclick="startQuiz()" style="width:100%; padding:14px;">Iniciar cuestionario →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-quiz" class="screen">
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span id="q-counter">Pregunta 1 de 5</span>
+        <span id="q-percent">0 %</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div id="question-card" class="question-card">
+      </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">Siguiente →</button>
+    </div>
+  </div>
+
+  <div id="screen-result" class="screen">
+    <div class="result-card">
+      <div class="result-banner" id="result-banner">
+        <div class="result-icon">🎉</div>
+        <div class="result-level">¡Cuestionario Completado!</div>
+        <div class="result-message">Muchas gracias por tu tiempo y colaboración. Tus respuestas han sido registradas.</div>
+      </div>
+      <div class="result-body">
+        <h3>📋 Resumen de tus respuestas</h3>
+        <div class="answers-summary" id="answers-summary"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-panel" class="screen">
+    <h2>📊 Panel de resultados</h2>
+    <p class="panel-subtitle">Todos los cuestionarios completados en este dispositivo. (Vista de administrador)</p>
+    <div class="panel-actions">
+      <button class="btn btn-secondary" onclick="restartQuiz()">← Salir del panel</button>
+    </div>
+    <div id="panel-content"></div>
+  </div>
+
+</main>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-box" id="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   BANCO DE PREGUNTAS (Sin puntaje, con respuestas correctas)
+================================================================ */
+const PREGUNTAS = [
+  {
+    texto: "¿Qué se considera Movimiento Manual de Cargas (MMC)?",
+    opciones: [
+      { texto: "a) Solo levantar objetos pesados." },
+      { texto: "b) Toda actividad que implique levantar, bajar, empujar, jalar, sostener o transportar cargas utilizando fuerza física humana.", esCorrecta: true },
+      { texto: "c) Únicamente transportar cajas." },
+      { texto: "d) Solo mover cargas sin desplazarse." }
+    ]
+  },
+  {
+    texto: "¿Cuál es la principal fuente de fuerza al levantar una carga correctamente?",
+    opciones: [
+      { texto: "a) La espalda." },
+      { texto: "b) Los brazos." },
+      { texto: "c) Las piernas.", esCorrecta: true },
+      { texto: "d) Los hombros." }
+    ]
+  },
+  {
+    texto: "Al transportar una carga, ¿dónde debe mantenerse?",
+    opciones: [
+      { texto: "a) Alejada del cuerpo para mejorar la visibilidad." },
+      { texto: "b) Pegada al cuerpo y entre el nivel de las rodillas y los hombros.", esCorrecta: true },
+      { texto: "c) A la altura de la cabeza." },
+      { texto: "d) Apoyada sobre un solo lado del cuerpo." }
+    ]
+  },
+  {
+    texto: "Si necesitas cambiar de dirección mientras sostienes una carga, debes:",
+    opciones: [
+      { texto: "a) Girar el tronco rápidamente." },
+      { texto: "b) Inclinar la espalda hacia el lado del giro." },
+      { texto: "c) Pivotear con los pies y mover el cuerpo como un bloque.", esCorrecta: true },
+      { texto: "d) Girar únicamente los hombros." }
+    ]
+  },
+  {
+    texto: "Antes de levantar una carga, ¿qué debes evaluar?",
+    opciones: [
+      { texto: "a) El peso, los puntos de agarre y las condiciones del entorno.", esCorrecta: true },
+      { texto: "b) Solo el peso de la carga." },
+      { texto: "c) Únicamente el lugar donde se depositará." },
+      { texto: "d) Solamente si otra persona puede ayudar." }
+      
+    ]
+  }
+];
+
+let currentQ   = 0;          
+let answers    = [];         
+let userData   = {};         
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goToRegister() {
+  showScreen('screen-register');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function startQuiz() {
+  const nombre = document.getElementById('input-nombre').value.trim();
+  const sector = document.getElementById('input-sector').value.trim();
+
+  let ok = true;
+  document.getElementById('err-duplicado').style.display = 'none';
+
+  if (!nombre) { document.getElementById('err-nombre').style.display = 'block'; ok = false; } 
+  else { document.getElementById('err-nombre').style.display = 'none'; }
+  
+  if (!sector) { document.getElementById('err-sector').style.display = 'block'; ok = false; } 
+  else { document.getElementById('err-sector').style.display = 'none'; }
+  
+  if (!ok) return;
+
+  // Validación: Solo se puede responder una vez (buscamos si el nombre ya existe)
+  const records = getRecords();
+  const alreadyAnswered = records.some(r => r.nombre.toLowerCase() === nombre.toLowerCase());
+  
+  if (alreadyAnswered) {
+    document.getElementById('err-duplicado').style.display = 'block';
+    return;
+  }
+
+  userData = { nombre, sector };
+  answers = new Array(PREGUNTAS.length).fill(null);
+  currentQ = 0;
+
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const total = PREGUNTAS.length;
+  const q     = PREGUNTAS[currentQ];
+
+  const pct = Math.round((currentQ / total) * 100);
+  document.getElementById('q-counter').textContent     = `Pregunta ${currentQ + 1} de ${total}`;
+  document.getElementById('q-percent').textContent     = `${pct} %`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+
+  const isLast = (currentQ === total - 1);
+  document.getElementById('btn-next').textContent = isLast ? 'Finalizar' : 'Siguiente →';
+
+  let opcionesHTML = '';
+  q.opciones.forEach((op, idx) => {
+    const checked  = (answers[currentQ] && answers[currentQ].opcionIdx === idx) ? 'checked' : '';
+    opcionesHTML += `
+      <li class="option-item">
+        <input type="radio" name="opcion" id="op${idx}" value="${idx}" ${checked} onchange="selectAnswer(${idx})">
+        <label for="op${idx}">
+          <span class="radio-circle"></span>
+          ${op.texto}
+        </label>
+      </li>`;
+  });
+
+  document.getElementById('question-card').innerHTML = `
+    <div class="q-number">Pregunta ${currentQ + 1} / ${total}</div>
+    <div class="q-text">${q.texto}</div>
+    <ul class="options-list">${opcionesHTML}</ul>
+    <div class="alert-answer" id="alert-answer">⚠ Por favor seleccioná una opción antes de continuar.</div>
+  `;
+
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  card.offsetHeight; 
+  card.style.animation = '';
+}
+
+function selectAnswer(opcionIdx) {
+  answers[currentQ] = { opcionIdx };
+  document.getElementById('alert-answer').style.display = 'none';
+}
+
+function nextQuestion() {
+  if (!answers[currentQ]) {
+    document.getElementById('alert-answer').style.display = 'block';
+    return;
+  }
+  if (currentQ < PREGUNTAS.length - 1) {
+    currentQ++;
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  let summaryHTML = '';
+  PREGUNTAS.forEach((q, idx) => {
+    const ans      = answers[idx];
+    const opcion   = ans ? q.opciones[ans.opcionIdx] : null;
+    const correcta = q.opciones.find(o => o.esCorrecta);
+    
+    // Verificamos si acertó para darle estilo a la respuesta
+    const esAcierto = opcion && opcion.esCorrecta;
+    const userClass = esAcierto ? 'ar-correct' : 'ar-wrong';
+    const userIcon  = esAcierto ? '✅' : '❌';
+
+    summaryHTML += `
+      <div class="answer-row">
+        <div class="ar-q">${idx + 1}. ${q.texto}</div>
+        <div class="ar-a ${userClass}">${userIcon} Tu respuesta: ${opcion ? opcion.texto : '—'}</div>
+        ${!esAcierto ? `<div class="ar-correct">✅ Respuesta correcta: ${correcta.texto}</div>` : ''}
+      </div>`;
+  });
+  
+  document.getElementById('answers-summary').innerHTML = summaryHTML;
+
+  saveRecord();
+  showScreen('screen-result');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ================================================================
+   FUNCIÓN SECRETA PARA ADMINISTRADORES
+================================================================ */
+function requestAdminAccess() {
+  const password = prompt("Área protegida. Ingresá la clave de administrador:");
+  if (password === "srt905") {
+    showPanel();
+  } else if (password !== null) {
+    alert("Clave incorrecta.");
+  }
+}
+
+function showPanel() {
+  showScreen('screen-panel');
+  renderPanel();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restartQuiz() {
+  document.getElementById('input-nombre').value = '';
+  document.getElementById('input-sector').value  = '';
+  document.getElementById('err-duplicado').style.display = 'none';
+  userData  = {};
+  answers   = [];
+  currentQ  = 0;
+  showScreen('screen-intro');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function saveRecord() {
+  const records = getRecords();
+  const record = {
+    id:       Date.now(),
+    fecha:    new Date().toLocaleString('es-AR'),
+    nombre:   userData.nombre,
+    sector:   userData.sector,
+    respuestas: PREGUNTAS.map((q, idx) => {
+      const opcionSeleccionada = answers[idx] ? q.opciones[answers[idx].opcionIdx] : null;
+      const opcionCorrecta = q.opciones.find(o => o.esCorrecta);
+      return {
+        pregunta: q.texto,
+        opcionElegida: opcionSeleccionada ? opcionSeleccionada.texto : '—',
+        opcionCorrecta: opcionCorrecta.texto,
+        acerto: opcionSeleccionada && opcionSeleccionada.esCorrecta
+      };
+    })
+  };
+  
+  // 1. Guardado local (para el panel de administrador)
+  records.push(record);
+  localStorage.setItem('hys_records', JSON.stringify(records));
+
+  // 2. Envío a Google Sheets
+  const dataSheets = {
+    nombre: userData.nombre,
+    sector: userData.sector,
+    respuestas: record.respuestas.map(r => r.opcionElegida) // Solo enviamos el texto de la opción elegida
+  };
+
+  //  3
+  const scriptURL = "https://script.google.com/macros/s/AKfycbwz8P0yHDc_m3dcHxFYRo8Lzirb-YEpy2wGvaAFLCBHfZLfZwew6BkwSHijaw6beuf1/exec"; 
+
+  fetch(scriptURL, {
+    method: 'POST',
+    mode: 'no-cors', 
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(dataSheets)
+  })
+  .then(() => console.log("Registro enviado a Google Sheets exitosamente."))
+  .catch(error => console.error("Error al enviar a Sheets:", error));
+}
+
+function getRecords() {
+  try { return JSON.parse(localStorage.getItem('hys_records')) || []; } 
+  catch { return []; }
+}
+
+function renderPanel() {
+  const records = getRecords();
+  const content = document.getElementById('panel-content');
+
+  if (records.length === 0) {
+    content.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <p>Todavía no hay registros guardados.<br>Completá el cuestionario para que aparezca aquí.</p>
+      </div>`;
+    return;
+  }
+
+  let rows = '';
+  records.slice().reverse().forEach(r => {
+    rows += `
+      <tr>
+        <td>${r.fecha}</td>
+        <td><strong>${r.nombre}</strong></td>
+        <td>${r.sector}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn-detail" onclick="openDetail(${r.id})">Ver detalle</button>
+        </td>
+      </tr>`;
+  });
+
+  content.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Nombre</th>
+            <th>Sector / Puesto</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function openDetail(id) {
+  const record = getRecords().find(r => r.id === id);
+  if (!record) return;
+
+  let respuestasHTML = '';
+  record.respuestas.forEach((resp, idx) => {
+    const userClass = resp.acerto ? 'ar-correct' : 'ar-wrong';
+    const userIcon  = resp.acerto ? '✅' : '❌';
+    
+    respuestasHTML += `
+      <div class="answer-row">
+        <div class="ar-q">${idx + 1}. ${resp.pregunta}</div>
+        <div class="ar-a ${userClass}">${userIcon} Respuesta: ${resp.opcionElegida}</div>
+        ${!resp.acerto ? `<div class="ar-correct">✅ Correcta: ${resp.opcionCorrecta}</div>` : ''}
+      </div>`;
+  });
+
+  document.getElementById('modal-content').innerHTML = `
+    <h3>📋 ${record.nombre}</h3>
+    <div class="modal-meta">
+      Sector: ${record.sector} &nbsp;·&nbsp;
+      ${record.fecha}
+    </div>
+    <div class="answers-summary">${respuestasHTML}</div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(event) {
+  if (!event || event.target === document.getElementById('modal-overlay') || event.currentTarget.classList.contains('modal-close')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+</script>
+</body>
+</html>
