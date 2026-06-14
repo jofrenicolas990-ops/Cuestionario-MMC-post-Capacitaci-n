@@ -257,6 +257,14 @@
       gap: 11px;
     }
 
+    /* Estilos extra para layout horizontal en imágenes */
+    .options-list.layout-row {
+      flex-direction: row;
+    }
+    .options-list.layout-row .option-item {
+      flex: 1;
+    }
+
     .option-item label {
       display: flex;
       align-items: flex-start;
@@ -269,6 +277,7 @@
       transition: border-color var(--transition), background var(--transition);
       font-size: .93rem;
       line-height: 1.45;
+      height: 100%;
     }
     .option-item label:hover {
       border-color: var(--accent);
@@ -419,6 +428,11 @@
       .result-banner { padding: 28px 20px 20px; }
       .result-body { padding: 20px 20px 28px; }
       .nav-buttons .btn { width: 100%; text-align: center; }
+      
+      /* En móviles muy chicos volvemos a apilar las opciones con imágenes */
+      .options-list.layout-row {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -451,13 +465,13 @@
 
       <div class="form-group">
         <label for="input-nombre">Nombre completo*</label>
-        <input type="text" id="input-nombre" placeholder="Ej.: María García" autocomplete="off" />
+        <input type="text" id="input-nombre" placeholder="Ej.: Pedro García" autocomplete="off" />
         <span class="error-msg" id="err-nombre">Por favor ingresá tu nombre.</span>
         <span class="error-msg" id="err-duplicado" style="color: var(--low); font-weight: 500;">Ya se ha registrado un cuestionario con este nombre. Solo puedes responder una vez.</span>
       </div>
 
       <div class="form-group">
-        <label for="input-sector">Sector o puesto de trabajo*</label>
+        <label for="input-sector">Puesto de trabajo*</label>
         <input type="text" id="input-sector" placeholder="Ej.: Logística / Operario de depósito" autocomplete="off" />
         <span class="error-msg" id="err-sector">Por favor ingresá tu sector o puesto.</span>
       </div>
@@ -471,7 +485,7 @@
   <div id="screen-quiz" class="screen">
     <div class="progress-wrap">
       <div class="progress-info">
-        <span id="q-counter">Pregunta 1 de 5</span>
+        <span id="q-counter">Pregunta 1 de 6</span>
         <span id="q-percent">0 %</span>
       </div>
       <div class="progress-bar-bg">
@@ -525,12 +539,12 @@
 ================================================================ */
 const PREGUNTAS = [
   {
-    texto: "¿Qué se considera Movimiento Manual de Cargas (MMC)?",
+    texto: "¿A partir de qué peso se considera que un objeto es una carga y requiere aplicar técnicas de levantamiento seguro?",
     opciones: [
-      { texto: "a) Solo levantar objetos pesados." },
-      { texto: "b) Toda actividad que implique levantar, bajar, empujar, jalar, sostener o transportar cargas utilizando fuerza física humana.", esCorrecta: true },
-      { texto: "c) Únicamente transportar cajas." },
-      { texto: "d) Solo mover cargas sin desplazarse." }
+      { texto: "a) 1 kg." },
+      { texto: "b) Más de 3 kg.", esCorrecta: true },
+      { texto: "c) 10 kg" },
+      { texto: "d) 5 kg." }
     ]
   },
   {
@@ -569,6 +583,14 @@ const PREGUNTAS = [
       { texto: "d) Solamente si otra persona puede ayudar." }
       
     ]
+  },
+  {
+    texto: "¿Cuál de estas dos posiciones de los pies crees que es la correcta al momento de levantar una carga del piso?",
+    layout: "row", // Agregado para que use Flexbox en fila
+    opciones: [
+      { texto: "<div style=\"width: 100%;\">a) Posición A (Pies juntos detrás)<br><img src=\"posición pies (atras).PNG\" alt=\"Posición A - Pies juntos detrás\" style=\"width: 100%; max-width: 180px; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border);\"></div>" },
+      { texto: "<div style=\"width: 100%;\">b) Posición B (Pies a los lados)<br><img src=\"posición piess (correcta).PNG\" alt=\"Posición B - Pies a los lados\" style=\"width: 100%; max-width: 180px; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border);\"></div>", esCorrecta: true }
+    ]
   }
 ];
 
@@ -601,7 +623,6 @@ function startQuiz() {
   
   if (!ok) return;
 
-  // Validación: Solo se puede responder una vez (buscamos si el nombre ya existe)
   const records = getRecords();
   const alreadyAnswered = records.some(r => r.nombre.toLowerCase() === nombre.toLowerCase());
   
@@ -643,10 +664,13 @@ function renderQuestion() {
       </li>`;
   });
 
+  // Verificamos si la pregunta tiene el diseño especial de fila
+  const layoutClass = q.layout === 'row' ? 'layout-row' : '';
+
   document.getElementById('question-card').innerHTML = `
     <div class="q-number">Pregunta ${currentQ + 1} / ${total}</div>
     <div class="q-text">${q.texto}</div>
-    <ul class="options-list">${opcionesHTML}</ul>
+    <ul class="options-list ${layoutClass}">${opcionesHTML}</ul>
     <div class="alert-answer" id="alert-answer">⚠ Por favor seleccioná una opción antes de continuar.</div>
   `;
 
@@ -682,16 +706,18 @@ function showResult() {
     const opcion   = ans ? q.opciones[ans.opcionIdx] : null;
     const correcta = q.opciones.find(o => o.esCorrecta);
     
-    // Verificamos si acertó para darle estilo a la respuesta
     const esAcierto = opcion && opcion.esCorrecta;
     const userClass = esAcierto ? 'ar-correct' : 'ar-wrong';
     const userIcon  = esAcierto ? '✅' : '❌';
 
+    const textoUsuario = opcion ? opcion.texto.replace(/<img[^>]*>/g, '').replace(/<\/?div[^>]*>/g, '') : '—';
+    const textoCorrecto = correcta.texto.replace(/<img[^>]*>/g, '').replace(/<\/?div[^>]*>/g, '');
+
     summaryHTML += `
       <div class="answer-row">
         <div class="ar-q">${idx + 1}. ${q.texto}</div>
-        <div class="ar-a ${userClass}">${userIcon} Tu respuesta: ${opcion ? opcion.texto : '—'}</div>
-        ${!esAcierto ? `<div class="ar-correct">✅ Respuesta correcta: ${correcta.texto}</div>` : ''}
+        <div class="ar-a ${userClass}">${userIcon} Tu respuesta: ${textoUsuario}</div>
+        ${!esAcierto ? `<div class="ar-correct">✅ Respuesta correcta: ${textoCorrecto}</div>` : ''}
       </div>`;
   });
   
@@ -741,28 +767,29 @@ function saveRecord() {
     respuestas: PREGUNTAS.map((q, idx) => {
       const opcionSeleccionada = answers[idx] ? q.opciones[answers[idx].opcionIdx] : null;
       const opcionCorrecta = q.opciones.find(o => o.esCorrecta);
+      
+      const txtElegida = opcionSeleccionada ? opcionSeleccionada.texto.replace(/<img[^>]*>/g, '').replace(/<\/?div[^>]*>/g, '') : '—';
+      const txtCorrecta = opcionCorrecta.texto.replace(/<img[^>]*>/g, '').replace(/<\/?div[^>]*>/g, '');
+
       return {
         pregunta: q.texto,
-        opcionElegida: opcionSeleccionada ? opcionSeleccionada.texto : '—',
-        opcionCorrecta: opcionCorrecta.texto,
+        opcionElegida: txtElegida,
+        opcionCorrecta: txtCorrecta,
         acerto: opcionSeleccionada && opcionSeleccionada.esCorrecta
       };
     })
   };
   
-  // 1. Guardado local (para el panel de administrador)
   records.push(record);
   localStorage.setItem('hys_records', JSON.stringify(records));
 
-  // 2. Envío a Google Sheets
   const dataSheets = {
     nombre: userData.nombre,
     sector: userData.sector,
-    respuestas: record.respuestas.map(r => r.opcionElegida) // Solo enviamos el texto de la opción elegida
+    respuestas: record.respuestas.map(r => r.opcionElegida) 
   };
 
-  //  3
-  const scriptURL = "https://script.google.com/macros/s/AKfycbwz8P0yHDc_m3dcHxFYRo8Lzirb-YEpy2wGvaAFLCBHfZLfZwew6BkwSHijaw6beuf1/exec"; 
+  const scriptURL = "https://script.google.com/macros/s/AKfycbxQJv6F88JhvpxA-6NP07UqOGxozOSSKaPMp20TRbYIjHSHVBz51pWlmLDUD7WqX9SI/exec"; 
 
   fetch(scriptURL, {
     method: 'POST',
